@@ -1,4 +1,22 @@
-// Auth types
+// ============================================================================
+// Type Exports - Backend Aligned
+// ============================================================================
+
+// Export all types from modular files
+export * from './tenant';
+export * from './usage';
+export * from './rule';
+export * from './provider';
+export * from './api';
+
+// ============================================================================
+// Legacy Types (for existing components - will migrate gradually)
+// ============================================================================
+
+/**
+ * Azure AD user account (from MSAL)
+ * @deprecated Use User from './tenant' for application users
+ */
 export interface UserAccount {
   homeAccountId: string;
   environment: string;
@@ -8,38 +26,10 @@ export interface UserAccount {
   name?: string;
 }
 
-// Rule types
-export interface Rule {
-  id: string;
-  name: string;
-  type: 'token_limit' | 'model_restriction' | 'rate_limit';
-  action: 'block' | 'alert';
-  priority: number;
-  enabled: boolean;
-  conditions: TokenLimitCondition | ModelRestrictionCondition | RateLimitCondition;
-  parameters: {
-    block_message?: string;
-    [key: string]: any;
-  };
-}
-
-export interface TokenLimitCondition {
-  limit_type: 'daily' | 'monthly' | 'hourly';
-  max_tokens: number;
-}
-
-export interface ModelRestrictionCondition {
-  restriction_type: 'allowlist' | 'blocklist';
-  models: string[];
-}
-
-export interface RateLimitCondition {
-  requests_per_minute?: number;
-  requests_per_hour?: number;
-  scope: 'user' | 'tenant';
-}
-
-// Token usage types
+/**
+ * Legacy token usage types (used by existing Dashboard)
+ * @deprecated Will migrate to TokenUsageLog from './usage'
+ */
 export interface TokenUsage {
   totalTokens: number;
   promptTokens: number;
@@ -70,7 +60,10 @@ export interface ModelUsage {
   percentage: number;
 }
 
-// User role types
+/**
+ * Legacy role type (used by existing UserRoleManagement)
+ * @deprecated Use RoleTokenLimit from './usage' for new implementations
+ */
 export interface Role {
   id: string;
   name: string;
@@ -80,15 +73,4 @@ export interface Role {
     monthly: number;
   };
   allowedModels: string[];
-}
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  roles: string[];
-  tokenUsage: {
-    daily: number;
-    monthly: number;
-  };
 }
