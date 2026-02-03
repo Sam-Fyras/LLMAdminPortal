@@ -8,7 +8,13 @@ import {
   Chip, SelectChangeEvent
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
-import { fetchRules, createRule, updateRule, deleteRule, toggleRuleStatus } from '../api/rules';
+import {
+  fetchRules,
+  createRule_Legacy as createRule,
+  updateRule_Legacy as updateRule,
+  deleteRule_Legacy as deleteRule,
+  toggleRuleStatus_Legacy as toggleRuleStatus
+} from '../api/rules';
 import { Rule } from '../types';
 
 const RulesManagementPage: React.FC = () => {
@@ -79,14 +85,14 @@ const RulesManagementPage: React.FC = () => {
   const handleEditRule = (rule: Rule) => {
     setEditingRule(rule);
     setRuleType(rule.type);
-    
+
     // Set form data based on rule type
     const baseData = {
       name: rule.name,
-      action: rule.action,
+      action: rule.action || 'block',
       priority: rule.priority,
       enabled: rule.enabled,
-      block_message: rule.parameters.block_message || 'Request blocked by policy'
+      block_message: rule.parameters?.block_message || 'Request blocked by policy'
     };
     
     if (rule.type === 'token_limit') {

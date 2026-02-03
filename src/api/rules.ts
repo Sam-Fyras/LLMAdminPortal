@@ -4,7 +4,7 @@ import {
   TenantRule,
   RuleTestRequest,
   RuleTestResult,
-  RuleValidationResult,
+  RuleValidation,
   RuleVersion,
 } from '../types/rule';
 
@@ -76,7 +76,7 @@ export const validateRule = (
   tenantId: string,
   rule: Omit<TenantRule, 'id' | 'tenantId' | 'schemaVersion' | 'createdDate' | 'updatedDate' | 'version'>
 ) => {
-  return axiosInstance.post<RuleValidationResult>(
+  return axiosInstance.post<RuleValidation>(
     `/api/v1/tenants/${tenantId}/rules/validate`,
     rule
   );
@@ -201,4 +201,36 @@ export const fetchRules = () => {
  */
 export const fetchRule = (id: string) => {
   return axiosInstance.get<Rule>(`/api/v1/tenant/rules/${id}`);
+};
+
+/**
+ * Legacy create rule (without tenantId parameter)
+ * @deprecated Use createRule(tenantId, rule) instead
+ */
+export const createRule_Legacy = (rule: Omit<Rule, 'id'>) => {
+  return axiosInstance.post<Rule>('/api/v1/tenant/rules', rule);
+};
+
+/**
+ * Legacy update rule (without tenantId parameter)
+ * @deprecated Use updateRule(tenantId, ruleId, rule) instead
+ */
+export const updateRule_Legacy = (id: string, rule: Partial<Rule>) => {
+  return axiosInstance.put<Rule>(`/api/v1/tenant/rules/${id}`, rule);
+};
+
+/**
+ * Legacy delete rule (without tenantId parameter)
+ * @deprecated Use deleteRule(tenantId, ruleId) instead
+ */
+export const deleteRule_Legacy = (id: string) => {
+  return axiosInstance.delete(`/api/v1/tenant/rules/${id}`);
+};
+
+/**
+ * Legacy toggle rule status (without tenantId parameter)
+ * @deprecated Use toggleRuleStatus(tenantId, ruleId, enabled) instead
+ */
+export const toggleRuleStatus_Legacy = (id: string, enabled: boolean) => {
+  return axiosInstance.patch<Rule>(`/api/v1/tenant/rules/${id}/status`, { enabled });
 };

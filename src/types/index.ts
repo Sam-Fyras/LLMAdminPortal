@@ -74,3 +74,18 @@ export interface Role {
   };
   allowedModels: string[];
 }
+
+/**
+ * Legacy rule type (used by existing RulesManagementPage)
+ * @deprecated Use TenantRule from './rule' for new implementations
+ */
+export interface Rule {
+  id: string;
+  name: string;
+  type: 'token_limit' | 'model_restriction' | 'rate_limit';
+  priority: number;
+  enabled: boolean;
+  conditions: Record<string, any>;
+  action?: string;
+  parameters?: Record<string, any>;
+}

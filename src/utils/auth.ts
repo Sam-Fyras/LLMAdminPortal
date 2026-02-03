@@ -17,7 +17,11 @@ export const refreshAuthToken = async (): Promise<string | null> => {
   return getTokenFunction();
 };
 
-// Custom hook to initialize the auth token getter
-export const useInitAuthTokenGetter = (getToken: () => Promise<string | null>) => {
+// Initialize the auth token getter (not a hook, just a regular function)
+export const initAuthTokenGetter = (getToken: () => Promise<string | null>) => {
   setAuthTokenGetter(getToken);
 };
+
+// Legacy export for backward compatibility
+// @deprecated Use initAuthTokenGetter instead
+export const useInitAuthTokenGetter = initAuthTokenGetter;

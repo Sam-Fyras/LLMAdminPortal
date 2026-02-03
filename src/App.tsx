@@ -4,7 +4,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { useInitAuthTokenGetter } from './utils/auth';
+import { initAuthTokenGetter } from './utils/auth';
 
 import Layout from './components/common/Layout';
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -27,10 +27,10 @@ const theme = createTheme({
 
 const AppContent: React.FC = () => {
   const { getToken } = useAuth();
-  
+
   // Initialize the auth token getter for use outside of React components
   useEffect(() => {
-    useInitAuthTokenGetter(getToken);
+    initAuthTokenGetter(getToken);
   }, [getToken]);
   
   return (
