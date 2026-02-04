@@ -1,7 +1,7 @@
 import { TenantRule, RuleTestResult, RuleValidation, RuleVersion } from '../../types/rule';
 import { Rule } from '../../types';
 
-// Mock tenant rules (new format)
+// Mock tenant rules (new format) - simplified to match type definitions exactly
 export const mockTenantRules: TenantRule[] = [
   {
     id: 'rule-1',
@@ -14,8 +14,10 @@ export const mockTenantRules: TenantRule[] = [
     priority: 1,
     enabled: true,
     conditions: {
+      type: 'token_limit',
       limit_type: 'daily',
       max_tokens: 50000,
+      scope: 'user',
     },
     parameters: {
       block_message: 'Daily token limit exceeded. Please try again tomorrow.',
@@ -37,12 +39,13 @@ export const mockTenantRules: TenantRule[] = [
     priority: 2,
     enabled: true,
     conditions: {
+      type: 'model_restriction',
       restriction_type: 'allowlist',
       models: ['gpt-4', 'claude-3-opus'],
-      apply_to_roles: ['admin', 'power-user'],
     },
     parameters: {
       block_message: 'You do not have access to premium models. Contact admin for upgrade.',
+      allowed_roles: ['admin', 'power-user'],
     },
     description: 'Restrict premium models to authorized roles',
     tags: ['production', 'model-access'],
@@ -60,6 +63,7 @@ export const mockTenantRules: TenantRule[] = [
     priority: 3,
     enabled: true,
     conditions: {
+      type: 'rate_limit',
       requests_per_minute: 10,
       requests_per_hour: 100,
       scope: 'user',
@@ -83,13 +87,13 @@ export const mockTenantRules: TenantRule[] = [
     priority: 4,
     enabled: true,
     conditions: {
+      type: 'hard_block',
       keywords: ['password', 'api_key', 'secret', 'private_key'],
       case_sensitive: false,
-      match_type: 'contains',
+      whole_word_only: false,
+      custom_message: 'Request blocked: Sensitive content detected.',
     },
-    parameters: {
-      block_message: 'Request blocked: Sensitive content detected.',
-    },
+    parameters: {},
     description: 'Block requests containing sensitive keywords',
     tags: ['security', 'content-filtering'],
     version: 1,
@@ -101,23 +105,21 @@ export const mockTenantRules: TenantRule[] = [
     schemaVersion: '1.0',
     createdDate: '2026-01-20T00:00:00Z',
     updatedDate: '2026-01-20T00:00:00Z',
-    name: 'PII Redaction',
+    name: 'Email Redaction',
     type: 'redaction',
     priority: 5,
     enabled: false,
     conditions: {
-      patterns: [
-        { type: 'email', regex: '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}' },
-        { type: 'phone', regex: '\\(\\d{3}\\)\\s*\\d{3}-\\d{4}' },
-        { type: 'ssn', regex: '\\d{3}-\\d{2}-\\d{4}' },
-      ],
-      replacement_text: '[REDACTED]',
+      type: 'redaction',
+      pattern_type: 'email',
+      replacement: '[REDACTED]',
+      apply_to: 'both',
     },
     parameters: {
       apply_to_input: true,
       apply_to_output: true,
     },
-    description: 'Automatically redact PII from requests and responses',
+    description: 'Automatically redact email addresses from requests and responses',
     tags: ['security', 'privacy', 'pii'],
     version: 1,
     created_by: 'admin@acme.com',
@@ -133,11 +135,11 @@ export const mockTenantRules: TenantRule[] = [
     priority: 6,
     enabled: true,
     conditions: {
-      budget_period: 'monthly',
-      max_cost_usd: 5000,
-      alert_threshold_percent: 80,
+      type: 'cost_control',
+      monthly_cost_cap: 5000,
     },
     parameters: {
+      alert_threshold_percent: 80,
       block_when_exceeded: true,
       notification_emails: ['admin@acme.com', 'finance@acme.com'],
     },
@@ -200,16 +202,23 @@ export const mockLegacyRules: Rule[] = [
 
 // Mock rule test result
 export const mockRuleTestResult: RuleTestResult = {
-  triggered_rules: ['rule-1', 'rule-4'],
-  actions_taken: ['blocked'],
-  modified_prompt: null,
-  explanation: 'Request blocked by rule "Daily Token Limit" - daily quota exceeded (50000/50000 tokens used)',
-  test_timestamp: '2026-02-03T10:00:00Z',
-  sample_data: {
-    prompt: 'Test prompt for rule validation',
-    user_id: 'user-1',
-    tokens_requested: 1000,
-  },
+  triggered_rules: [
+    {
+      rule_id: 'rule-1',
+      rule_name: 'Daily Token Limit',
+      action: 'block',
+    },
+    {
+      rule_id: 'rule-4',
+      rule_name: 'Block Sensitive Content',
+      action: 'block',
+    },
+  ],
+  modified_prompt: undefined,
+  modified_response: undefined,
+  is_blocked: true,
+  block_reason: 'Daily token limit exceeded (50000/50000 tokens used)',
+  warnings: [],
 };
 
 // Mock rule validation
@@ -222,60 +231,38 @@ export const mockRuleValidation: RuleValidation = {
       message: 'Token limit is very high (>1M). Consider if this is intentional.',
     },
   ],
-  conflicts: [],
-  validation_timestamp: '2026-02-03T10:00:00Z',
 };
 
 // Mock rule versions (for version history)
 export const mockRuleVersions: RuleVersion[] = [
   {
     version: 2,
-    rule_snapshot: {
+    rule_id: 'rule-1',
+    snapshot: {
       ...mockTenantRules[0],
       version: 2,
       updatedDate: '2026-01-15T00:00:00Z',
     },
     changed_by: 'admin@acme.com',
-    change_summary: 'Increased daily token limit from 30000 to 50000',
-    change_timestamp: '2026-01-15T00:00:00Z',
+    changed_at: '2026-01-15T00:00:00Z',
+    change_description: 'Increased daily token limit from 30000 to 50000',
   },
   {
     version: 1,
-    rule_snapshot: {
+    rule_id: 'rule-1',
+    snapshot: {
       ...mockTenantRules[0],
       version: 1,
       conditions: {
+        type: 'token_limit',
         limit_type: 'daily',
         max_tokens: 30000,
+        scope: 'user',
       },
       updatedDate: '2025-01-05T00:00:00Z',
     },
     changed_by: 'admin@acme.com',
-    change_summary: 'Initial rule creation',
-    change_timestamp: '2025-01-05T00:00:00Z',
-  },
-];
-
-// Rule templates (for quick rule creation)
-export const mockRuleTemplates = [
-  {
-    id: 'template-token-limit',
-    name: 'Token Limit Template',
-    type: 'token_limit' as const,
-    description: 'Standard token limit rule',
-    conditions: {
-      limit_type: 'daily',
-      max_tokens: 10000,
-    },
-  },
-  {
-    id: 'template-model-restrict',
-    name: 'Model Restriction Template',
-    type: 'model_restriction' as const,
-    description: 'Restrict access to specific models',
-    conditions: {
-      restriction_type: 'allowlist',
-      models: ['gpt-3.5-turbo'],
-    },
+    changed_at: '2025-01-05T00:00:00Z',
+    change_description: 'Initial rule creation',
   },
 ];

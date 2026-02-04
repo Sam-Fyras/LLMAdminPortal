@@ -301,22 +301,38 @@ export function setupMockApi(axiosInstance: AxiosInstance, delay: number = 500) 
 
   // Get usage breakdown
   mock.onGet(/\/api\/v1\/analytics\/[\w-]+\/breakdown/).reply(200, {
-    by_user: mockUsageAnalytics.by_user,
-    by_model: mockUsageAnalytics.by_model,
+    by_user: [
+      { user_id: 'user-1', user_email: 'admin@acme.com', tokens: 3200000, cost: 160 },
+      { user_id: 'user-2', user_email: 'analyst@acme.com', tokens: 2650000, cost: 132.5 },
+      { user_id: 'user-3', user_email: 'dev@acme.com', tokens: 2350000, cost: 117.5 },
+    ],
+    by_model: {
+      'gpt-4': 4250000,
+      'claude-3-sonnet': 2100000,
+      'gpt-3.5-turbo': 1575000,
+    },
   });
 
   // Get usage trends
   mock.onGet(/\/api\/v1\/analytics\/[\w-]+\/trends/).reply(200, {
-    daily: mockUsageAnalytics.by_day,
+    daily: mockUsageAnalytics.data,
     trend: 'increasing',
     growth_rate: 5.2,
   });
 
   // Get top users
-  mock.onGet(/\/api\/v1\/analytics\/[\w-]+\/top-users/).reply(200, mockUsageAnalytics.top_users);
+  mock.onGet(/\/api\/v1\/analytics\/[\w-]+\/top-users/).reply(200, [
+    { user_id: 'user-1', tokens: 3200000, rank: 1 },
+    { user_id: 'user-2', tokens: 2650000, rank: 2 },
+    { user_id: 'user-3', tokens: 2350000, rank: 3 },
+  ]);
 
   // Get usage by model
-  mock.onGet(/\/api\/v1\/analytics\/[\w-]+\/by-model/).reply(200, mockUsageAnalytics.by_model);
+  mock.onGet(/\/api\/v1\/analytics\/[\w-]+\/by-model/).reply(200, [
+    { model: 'gpt-4', tokens: 4250000, cost: 255, percentage: 48.6 },
+    { model: 'claude-3-sonnet', tokens: 2100000, cost: 105, percentage: 24.0 },
+    { model: 'gpt-3.5-turbo', tokens: 1575000, cost: 47.25, percentage: 18.0 },
+  ]);
 
   // ============================================================================
   // Role Management
@@ -488,14 +504,14 @@ export function setupMockApi(axiosInstance: AxiosInstance, delay: number = 500) 
   mock.onPost(/\/api\/v1\/tenants\/[\w-]+\/rules\/[\w-]+\/rollback\/\d+/).reply((config) => {
     const version = parseInt(config.url?.split('/').pop() || '1');
     const versionData = mockRuleVersions.find(v => v.version === version);
-    return versionData ? [200, versionData.rule_snapshot] : [404, { error: 'Version not found' }];
+    return versionData ? [200, versionData.snapshot] : [404, { error: 'Version not found' }];
   });
 
   // Get rule version
   mock.onGet(/\/api\/v1\/tenants\/[\w-]+\/rules\/[\w-]+\/versions\/\d+/).reply((config) => {
     const version = parseInt(config.url?.split('/').pop() || '1');
     const versionData = mockRuleVersions.find(v => v.version === version);
-    return versionData ? [200, versionData.rule_snapshot] : [404, { error: 'Version not found' }];
+    return versionData ? [200, versionData.snapshot] : [404, { error: 'Version not found' }];
   });
 
   // ============================================================================
