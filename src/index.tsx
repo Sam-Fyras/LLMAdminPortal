@@ -5,6 +5,10 @@ import './index.css';
 import App from './App';
 import { store } from './redux/store';
 import reportWebVitals from './reportWebVitals';
+import { initializeMockApi } from './mocks';
+
+// Initialize mock API before rendering (if enabled)
+initializeMockApi();
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
