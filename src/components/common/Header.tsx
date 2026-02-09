@@ -1,33 +1,24 @@
-import React, { useState } from 'react';
-import { 
-  AppBar, Toolbar, Typography, Button, 
-  IconButton, Box, Avatar, Menu, MenuItem,
+import React from 'react';
+import {
+  AppBar, Toolbar, Typography, Button,
+  Box, Avatar,
   Container
 } from '@mui/material';
+import { Logout as LogoutIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 const Header: React.FC = () => {
   const { isAuthenticated, account, logout } = useAuth();
   const navigate = useNavigate();
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
-  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
 
   const handleLogout = () => {
-    handleClose();
     logout();
     navigate('/login');
   };
 
   return (
-    <AppBar position="static">
+    <AppBar position="static" sx={{zIndex : 2 }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <Typography
@@ -39,62 +30,25 @@ const Header: React.FC = () => {
           </Typography>
           
           {isAuthenticated ? (
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Button 
-                color="inherit" 
-                onClick={() => navigate('/dashboard')}
-                sx={{ mx: 1 }}
-              >
-                Dashboard
-              </Button>
-              <Button 
-                color="inherit" 
-                onClick={() => navigate('/rules')}
-                sx={{ mx: 1 }}
-              >
-                Rules
-              </Button>
-              <Button 
-                color="inherit" 
-                onClick={() => navigate('/users')}
-                sx={{ mx: 1 }}
-              >
-                Users
-              </Button>
-              
-              <IconButton
-                size="large"
-                onClick={handleMenu}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
+                {account?.name?.charAt(0) || 'U'}
+              </Avatar>
+              <Button
                 color="inherit"
-                sx={{ ml: 2 }}
-              >
-                <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
-                  {account?.name?.charAt(0) || 'U'}
-                </Avatar>
-              </IconButton>
-              <Menu
-                id="menu-appbar"
-                anchorEl={anchorEl}
-                anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'right',
+                onClick={handleLogout}
+                variant="outlined"
+                startIcon={<LogoutIcon />}
+                sx={{
+                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                  '&:hover': {
+                    borderColor: 'white',
+                    bgcolor: 'rgba(255, 255, 255, 0.1)'
+                  }
                 }}
-                keepMounted
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                open={Boolean(anchorEl)}
-                onClose={handleClose}
               >
-                <MenuItem disabled>
-                  {account?.name || account?.username || 'User'}
-                </MenuItem>
-                <MenuItem onClick={() => { handleClose(); navigate('/profile'); }}>
-                  Profile
-                </MenuItem>
-                <MenuItem onClick={handleLogout}>Logout</MenuItem>
-              </Menu>
+                Logout
+              </Button>
             </Box>
           ) : (
             <Button color="inherit" onClick={() => navigate('/login')}>
