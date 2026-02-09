@@ -27,7 +27,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <AppBar position="static">
+    <AppBar position="fixed" sx={{zIndex:2}}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <Typography

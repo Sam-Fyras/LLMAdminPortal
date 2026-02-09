@@ -1,6 +1,7 @@
 import React from 'react';
 import { Container, Box, Typography } from '@mui/material';
 import Header from './Header';
+import Sidebar from './Sidebar';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -8,11 +9,14 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', overflow: 'hidden',alignItems : 'center'}}>
       <Header />
-      <Container component="main" sx={{ mt: 4, mb: 4, flex: 1 }}>
-        {children}
-      </Container>
+      <Box sx={{display:'flex',flex:1,overflow:'hidden' }}>
+        <Sidebar />
+        <Container component="main" sx={{ mt: 10, mb: 4, flex: 1, overflow:'auto', display:'flex'}}>
+          {children}
+        </Container>
+      </Box>
       <Box component="footer" sx={{ py: 3, bgcolor: 'background.paper' }}>
         <Container maxWidth="lg">
           <Box textAlign="center">
