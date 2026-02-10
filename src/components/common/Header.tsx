@@ -18,7 +18,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <AppBar position="static" sx={{zIndex : 2 }}>
+    <AppBar position="fixed" sx={{zIndex:2}}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <Typography
