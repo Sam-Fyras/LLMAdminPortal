@@ -109,7 +109,7 @@ export const AlertList: React.FC<AlertListProps> = ({
       </Box>
 
       {/* Filter Toolbar */}
-      <Paper sx={{ p: 2, mb: 3, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+      <Paper sx={{ p: 2, mb: 3, display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'nowrap' }}>
         <TextField
           size="small"
           placeholder="Search message or user..."
@@ -122,10 +122,10 @@ export const AlertList: React.FC<AlertListProps> = ({
               </InputAdornment>
             ),
           }}
-          sx={{ minWidth: 240 }}
+          sx={{ flex: 1, minWidth: 120 }}
         />
 
-        <FormControl size="small" sx={{ minWidth: 140 }}>
+        <FormControl size="small" sx={{ minWidth: 110 }}>
           <InputLabel>Severity</InputLabel>
           <Select
             value={filterSeverity}
@@ -139,7 +139,7 @@ export const AlertList: React.FC<AlertListProps> = ({
           </Select>
         </FormControl>
 
-        <FormControl size="small" sx={{ minWidth: 180 }}>
+        <FormControl size="small" sx={{ minWidth: 140 }}>
           <InputLabel>Alert Type</InputLabel>
           <Select
             value={filterType}
@@ -153,7 +153,7 @@ export const AlertList: React.FC<AlertListProps> = ({
           </Select>
         </FormControl>
 
-        <FormControl size="small" sx={{ minWidth: 150 }}>
+        <FormControl size="small" sx={{ minWidth: 120 }}>
           <InputLabel>Status</InputLabel>
           <Select
             value={filterStatus}
@@ -167,16 +167,18 @@ export const AlertList: React.FC<AlertListProps> = ({
           </Select>
         </FormControl>
 
-        <TextField
-          size="small" type="date" label="From"
-          value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
-          slotProps={{ inputLabel: { shrink: true } }} sx={{ minWidth: 150 }}
-        />
-        <TextField
-          size="small" type="date" label="To"
-          value={dateTo} onChange={(e) => setDateTo(e.target.value)}
-          slotProps={{ inputLabel: { shrink: true } }} sx={{ minWidth: 150 }}
-        />
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <TextField
+            size="small" type="date" label="From"
+            value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
+            slotProps={{ inputLabel: { shrink: true } }} sx={{ minWidth: 140 }}
+          />
+          <TextField
+            size="small" type="date" label="To"
+            value={dateTo} onChange={(e) => setDateTo(e.target.value)}
+            slotProps={{ inputLabel: { shrink: true } }} sx={{ minWidth: 140 }}
+          />
+        </Box>
 
         <Typography variant="body2" color="text.secondary" sx={{ ml: 'auto' }}>
           {filtered.length} of {alerts.length} alerts

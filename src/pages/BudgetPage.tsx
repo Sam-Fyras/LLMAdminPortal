@@ -6,7 +6,7 @@ import {
   Tabs,
   Paper,
   Button,
-  CircularProgress,
+  Skeleton,
   Alert as MuiAlert,
   IconButton,
   Tooltip,
@@ -236,8 +236,16 @@ const BudgetPage: React.FC = () => {
       )}
 
       {loading && !budgets.length ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
+        <Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+            <Box sx={{ flex: 1 }}>
+              <Skeleton variant="text" width={220} height={44} />
+              <Skeleton variant="text" width={380} height={24} />
+            </Box>
+            <Skeleton variant="rounded" width={160} height={36} />
+          </Box>
+          <Skeleton variant="rounded" height={56} sx={{ mb: 3 }} />
+          <Skeleton variant="rounded" height={400} />
         </Box>
       ) : (
         <>

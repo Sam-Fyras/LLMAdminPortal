@@ -28,27 +28,41 @@ const Header: React.FC = () => {
           >
             Fyras LLM Admin Portal
           </Typography>
-          
           {isAuthenticated ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
-                {account?.name?.charAt(0) || 'U'}
-              </Avatar>
-              <Button
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>  
+              <IconButton
+                size="large"
+                onClick={handleMenu}
                 color="inherit"
-                onClick={handleLogout}
-                variant="outlined"
-                startIcon={<LogoutIcon />}
-                sx={{
-                  borderColor: 'rgba(255, 255, 255, 0.5)',
-                  '&:hover': {
-                    borderColor: 'white',
-                    bgcolor: 'rgba(255, 255, 255, 0.1)'
-                  }
-                }}
+                sx={{ ml: 2 }}
               >
-                Logout
-              </Button>
+                <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
+                  {account?.name?.charAt(0) || 'U'}
+                </Avatar>
+              </IconButton>
+              <Menu
+                id="menu-appbar"
+                anchorEl={anchorEl}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'right',
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+              >
+                <MenuItem disabled>
+                  {account?.name || account?.username || 'User'}
+                </MenuItem>
+                <MenuItem onClick={() => { handleClose(); navigate('/profile'); }}>
+                  Profile
+                </MenuItem>
+                <MenuItem onClick={handleLogout}>Logout</MenuItem>
+              </Menu>
             </Box>
           ) : (
             <Button color="inherit" onClick={() => navigate('/login')}>

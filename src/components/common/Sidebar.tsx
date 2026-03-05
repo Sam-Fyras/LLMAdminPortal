@@ -11,23 +11,26 @@ import {
     AccountBalance,Notifications
 } from '@mui/icons-material' ;
 
+const menuItem = [
+    { text: 'Home', icon: <Home />, path: '/' },
+    { text: 'Users', icon: <Person />, path: '/users' },
+    { text: 'Rules', icon: <Gavel />, path: '/rules' },
+    { text: 'Provider', icon: <Storefront />, path: '/provider' },
+    { text: 'Budget', icon: <AccountBalance />, path: '/budget' },
+    { text: 'Alerts', icon: <Notifications />, path: '/alerts' },
+
+]
+
 const Sidebar : React.FC = () =>{
+
     const navigate = useNavigate();
     const location = useLocation();
-
-    const menuItem = [
-        {text:'Home', icon : <Home />, path: '/dashboard'},
-        {text:'User', icon : <Person />, path: '/users'},
-        {text:'Rules', icon : <Gavel />, path: '/rules'},
-        {text:'Provider', icon : <Storefront />, path: '/providers'},
-        {text:'Budget', icon : <AccountBalance />, path: '/budget'},
-        {text:'Alerts', icon : <Notifications />, path: '/alerts'},
-    ]
 
     return (
         <Drawer
             variant='permanent'
             sx={{
+                width:260,
                 flexShrink:0,
                 zIndex:1,
                 [`& .MuiDrawer-paper`]:{
@@ -35,14 +38,19 @@ const Sidebar : React.FC = () =>{
                     boxSizing: 'border-box',
                     backgroundColor: 'background.paper',
                     borderRight: '1px solid',
-                    borderColor: 'divider'
+                    borderColor: 'divider',
+                    position: 'fixed',
+                    height: '100vh',
+                    top: 0,
+                    left: 0,
+                    zIndex: 1
                 }
             }}
         >
         <Box sx={{ overflow:'auto',mt : 10 }}>
             <List>
                 {menuItem.map((item) => (
-                    <ListItem key = {item.text} disablePadding sx={{ display:'block',mb:2 }}>
+                    <ListItem key = {item.text} disablePadding onClick={() => navigate(item.path)} sx={{ display:'block',mb:2 }}>
                         <ListItemButton
                             onClick={() => navigate(item.path)}
                             selected={location.pathname === item.path}

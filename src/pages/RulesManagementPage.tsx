@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Box, Typography, Button, CircularProgress, Alert,
+  Box, Typography, Button, Skeleton, Alert,
   Dialog, DialogTitle, DialogContent, DialogActions,
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
@@ -148,19 +148,31 @@ const RulesManagementPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-        <CircularProgress />
+      <Box sx={{ p: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+          <Box sx={{ flex: 1 }}>
+            <Skeleton variant="text" width={200} height={44} />
+            <Skeleton variant="text" width={280} height={24} />
+          </Box>
+          <Skeleton variant="rounded" width={150} height={36} />
+        </Box>
+        <Skeleton variant="rounded" height={400} />
       </Box>
     );
   }
 
   return (
-    <Box>
+    <Box sx={{ p: 3 }}>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, alignItems: 'center' }}>
-        <Typography variant="h4" component="h1">
-          Rule Management
-        </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, alignItems: 'flex-start' }}>
+        <Box>
+          <Typography variant="h4" fontWeight={600} gutterBottom>
+            Rule Management
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Create and manage content filtering and routing rules.
+          </Typography>
+        </Box>
         <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreateRule}>
           Create New Rule
         </Button>

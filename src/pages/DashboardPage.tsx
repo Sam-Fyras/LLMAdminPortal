@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, CircularProgress, Alert } from '@mui/material';
+import { Box, Typography, Skeleton, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { fetchTokenUsage, fetchModelUsage } from '../api/tokens';
 import { getTopUsers } from '../api/usage';
@@ -162,26 +162,36 @@ const DashboardPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-        <CircularProgress />
+      <Box sx={{ p: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+          <Box sx={{ flex: 1 }}>
+            <Skeleton variant="text" width={260} height={44} />
+            <Skeleton variant="text" width={340} height={24} />
+          </Box>
+          <Skeleton variant="rounded" width={180} height={36} />
+        </Box>
+        <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} variant="rounded" height={120} sx={{ flex: 1 }} />
+          ))}
+        </Box>
+        <Skeleton variant="rounded" height={300} sx={{ mb: 3 }} />
+        <Skeleton variant="rounded" height={200} />
       </Box>
     );
   }
 
   return (
-    <Box>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          mb: 4,
-          alignItems: 'center',
-        }}
-      >
-        <Typography variant="h4" component="h1">
-          Token Usage Dashboard
-        </Typography>
-
+    <Box sx={{ p: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, alignItems: 'flex-start' }}>
+        <Box>
+          <Typography variant="h4" fontWeight={600} gutterBottom>
+            Token Usage Dashboard
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Monitor token consumption, model usage, and top users.
+          </Typography>
+        </Box>
         <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
       </Box>
 

@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   PublicClientApplication,
-  AuthenticationResult,
   AccountInfo,
   InteractionRequiredAuthError
 } from '@azure/msal-browser';
+import { MockTenantUser, mockTenantUsers } from '../mocks/data/mockUsers';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -12,33 +12,37 @@ interface AuthContextType {
   login: () => Promise<void>;
   logout: () => void;
   getToken: () => Promise<string | null>;
+  // Mock user switching
+  currentMockUser: MockTenantUser;
+  switchUser: (user: MockTenantUser) => void;
+  isSuperAdmin: boolean;
 }
 
 // Check if mock mode is enabled (for development/testing without Azure AD)
 const MOCK_AUTH_MODE = process.env.REACT_APP_MOCK_AUTH === 'true';
 
-// Mock account data for testing
-const mockAccount: AccountInfo = {
-  homeAccountId: 'mock-home-account-id',
+const buildMockAccount = (user: MockTenantUser): AccountInfo => ({
+  homeAccountId: `mock-${user.id}`,
   environment: 'mock-environment',
-  tenantId: 'mock-tenant-123',
-  username: 'testuser@example.com',
-  localAccountId: 'mock-local-account-id',
-  name: 'Test User',
+  tenantId: user.tenantId,
+  username: user.username,
+  localAccountId: user.id,
+  name: user.name,
   idTokenClaims: {
     aud: 'mock-audience',
     iss: 'mock-issuer',
     iat: Date.now() / 1000,
     nbf: Date.now() / 1000,
     exp: (Date.now() / 1000) + 3600,
-    name: 'Test User',
-    preferred_username: 'testuser@example.com',
-    oid: 'mock-object-id',
-    sub: 'mock-subject',
-    tid: 'mock-tenant-123',
-    ver: '2.0'
-  }
-};
+    name: user.name,
+    preferred_username: user.username,
+    oid: user.id,
+    sub: user.id,
+    tid: user.tenantId,
+    ver: '2.0',
+    roles: [user.role],
+  },
+});
 
 const msalConfig = {
   auth: {
@@ -63,15 +67,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const [account, setAccount] = useState<AccountInfo | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Default to Sam (super_admin)
+  const [currentMockUser, setCurrentMockUser] = useState<MockTenantUser>(mockTenantUsers[0]);
 
   useEffect(() => {
     if (MOCK_AUTH_MODE) {
-      // In mock mode, automatically log in with mock account
-      console.log('🔧 Mock Auth Mode: Auto-login with test user');
-      setAccount(mockAccount);
+      console.log('🔧 Mock Auth Mode: Auto-login as', mockTenantUsers[0].name);
+      setAccount(buildMockAccount(mockTenantUsers[0]));
       setIsAuthenticated(true);
     } else {
-      // Real MSAL authentication
       const initializeMsal = async () => {
         try {
           if (msalInstance) {
@@ -90,20 +94,22 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     }
   }, []);
 
+  const switchUser = (user: MockTenantUser): void => {
+    console.log('🔧 Switching to user:', user.name, `(${user.role})`);
+    setCurrentMockUser(user);
+    setAccount(buildMockAccount(user));
+  };
+
   const login = async (): Promise<void> => {
     if (MOCK_AUTH_MODE) {
-      // Mock login - instantly succeed
       console.log('🔧 Mock Auth Mode: Login successful');
-      setAccount(mockAccount);
+      setAccount(buildMockAccount(currentMockUser));
       setIsAuthenticated(true);
       return;
     }
 
-    // Real MSAL login
     try {
-      if (!msalInstance) {
-        throw new Error('MSAL instance not initialized');
-      }
+      if (!msalInstance) throw new Error('MSAL instance not initialized');
       const loginRequest = {
         scopes: ["openid", "profile", "api://fyras-gateway-client-id/llm.access"]
       };
@@ -118,31 +124,19 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
 
   const logout = (): void => {
     if (MOCK_AUTH_MODE) {
-      // Mock logout
-      console.log('🔧 Mock Auth Mode: Logout');
       setAccount(null);
       setIsAuthenticated(false);
       return;
     }
-
-    // Real MSAL logout
-    if (msalInstance) {
-      msalInstance.logout();
-    }
+    if (msalInstance) msalInstance.logoutRedirect();
     setAccount(null);
     setIsAuthenticated(false);
   };
 
   const getToken = async (): Promise<string | null> => {
-    if (MOCK_AUTH_MODE) {
-      // Return mock JWT token
-      return 'mock-jwt-token-for-testing';
-    }
+    if (MOCK_AUTH_MODE) return 'mock-jwt-token-for-testing';
 
-    // Real MSAL token acquisition
-    if (!account || !msalInstance) {
-      return null;
-    }
+    if (!account || !msalInstance) return null;
 
     const tokenRequest = {
       scopes: ["api://fyras-gateway-client-id/llm.access"],
@@ -168,12 +162,15 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      isAuthenticated, 
-      account, 
-      login, 
-      logout, 
-      getToken 
+    <AuthContext.Provider value={{
+      isAuthenticated,
+      account,
+      login,
+      logout,
+      getToken,
+      currentMockUser,
+      switchUser,
+      isSuperAdmin: currentMockUser.role === 'super_admin',
     }}>
       {children}
     </AuthContext.Provider>

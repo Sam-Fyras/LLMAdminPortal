@@ -21,7 +21,7 @@ export const TimeRangeSelector: React.FC<TimeRangeSelectorProps> = ({
 
   return (
     <FormControl sx={{ minWidth: 200 }} variant="outlined" size="small">
-      <InputLabel id="time-range-label" sx={{ backgroundColor: 'white', px: 0.5 }}>
+      <InputLabel id="time-range-label" sx={{ bgcolor: 'background.paper', px: 0.5 }}>
         Time Range
       </InputLabel>
       <Select

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, Tab, Tabs, Paper,
-  CircularProgress, Alert as MuiAlert,
+  Skeleton, Alert as MuiAlert,
 } from '@mui/material';
 import {
   NotificationsActive as AlertsIcon,
@@ -35,10 +35,18 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
 
 const AlertsAuditPage: React.FC = () => {
   const [activeTab,     setActiveTab]     = useState(0);
-  const [alerts,        setAlerts]        = useState<Alert[]>(mockAlerts);
+  const [alerts,        setAlerts]        = useState<Alert[]>([]);
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
-  const [loading]                         = useState(false);
+  const [loading,       setLoading]       = useState(true);
   const [error]                           = useState<string | null>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAlerts(mockAlerts);
+      setLoading(false);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   // ============================================================================
   // Handlers
@@ -98,6 +106,19 @@ const AlertsAuditPage: React.FC = () => {
   // Render
   // ============================================================================
 
+  if (loading) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Box sx={{ mb: 3 }}>
+          <Skeleton variant="text" width={240} height={44} />
+          <Skeleton variant="text" width={360} height={24} />
+        </Box>
+        <Skeleton variant="rounded" height={56} sx={{ mb: 3 }} />
+        <Skeleton variant="rounded" height={400} />
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ p: 3 }}>
       {/* Page Header */}
@@ -115,12 +136,7 @@ const AlertsAuditPage: React.FC = () => {
         <MuiAlert severity="error" sx={{ mb: 2 }}>{error}</MuiAlert>
       )}
 
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <>
+      <>
           {/* Tabs */}
           <Paper sx={{ mb: 0 }}>
             <Tabs
@@ -176,8 +192,7 @@ const AlertsAuditPage: React.FC = () => {
           <TabPanel value={activeTab} index={1}>
             <AuditLogTable logs={mockAuditLogs} />
           </TabPanel>
-        </>
-      )}
+      </>
 
       {/* Alert Detail Drawer */}
       <AlertDetails

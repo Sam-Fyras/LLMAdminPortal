@@ -4,7 +4,7 @@ import {
   TableContainer, TableHead, TableRow, TextField, Chip,
   IconButton, Tooltip, InputAdornment, FormControl,
   InputLabel, Select, MenuItem, SelectChangeEvent,
-  Button, Collapse,
+  Button, Collapse, Menu, ListItemIcon, ListItemText,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -18,6 +18,9 @@ import {
   Login as LoginIcon,
   Logout as LogoutIcon,
   Key as KeyIcon,
+  ArrowDropDown as ArrowDropDownIcon,
+  TableChart as TableChartIcon,
+  DataObject as DataObjectIcon,
 } from '@mui/icons-material';
 import { AuditLog, AuditEventType, AuditResourceType } from '../../types/alert';
 
@@ -159,8 +162,8 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs }) => {
   const [filterUser,  setFilterUser]  = useState<string>('all');
   const [dateFrom,    setDateFrom]    = useState('');
   const [dateTo,      setDateTo]      = useState('');
-  const [expandedId,  setExpandedId]  = useState<string | null>(null);
-  const [exportMenu,  setExportMenu]  = useState(false);
+  const [expandedId,    setExpandedId]    = useState<string | null>(null);
+  const [exportAnchor,  setExportAnchor]  = useState<null | HTMLElement>(null);
 
   // Unique users for filter dropdown
   const uniqueUsers = useMemo(() => {
@@ -190,7 +193,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs }) => {
   return (
     <>
       {/* Filter Toolbar */}
-      <Paper sx={{ p: 2, mb: 3, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+      <Paper sx={{ p: 2, mb: 3, display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'nowrap' }}>
         <TextField
           size="small"
           placeholder="Search user, event, resource..."
@@ -205,10 +208,10 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs }) => {
               ),
             },
           }}
-          sx={{ minWidth: 240 }}
+          sx={{ flex: 1, minWidth: 120 }}
         />
 
-        <FormControl size="small" sx={{ minWidth: 190 }}>
+        <FormControl size="small" sx={{ minWidth: 150 }}>
           <InputLabel>Event Type</InputLabel>
           <Select
             value={filterEvent}
@@ -229,7 +232,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs }) => {
           </Select>
         </FormControl>
 
-        <FormControl size="small" sx={{ minWidth: 160 }}>
+        <FormControl size="small" sx={{ minWidth: 130 }}>
           <InputLabel>User</InputLabel>
           <Select
             value={filterUser}
@@ -243,38 +246,59 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs }) => {
           </Select>
         </FormControl>
 
-        <TextField
-          size="small" type="date" label="From"
-          value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
-          slotProps={{ inputLabel: { shrink: true } }} sx={{ minWidth: 150 }}
-        />
-        <TextField
-          size="small" type="date" label="To"
-          value={dateTo} onChange={(e) => setDateTo(e.target.value)}
-          slotProps={{ inputLabel: { shrink: true } }} sx={{ minWidth: 150 }}
-        />
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <TextField
+            size="small" type="date" label="From"
+            value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
+            slotProps={{ inputLabel: { shrink: true } }} sx={{ minWidth: 140 }}
+          />
+          <TextField
+            size="small" type="date" label="To"
+            value={dateTo} onChange={(e) => setDateTo(e.target.value)}
+            slotProps={{ inputLabel: { shrink: true } }} sx={{ minWidth: 140 }}
+          />
+        </Box>
 
         <Box sx={{ ml: 'auto', display: 'flex', gap: 1, alignItems: 'center' }}>
           <Typography variant="body2" color="text.secondary">
             {filtered.length} of {logs.length} entries
           </Typography>
-          {/* Export buttons */}
           <Button
-            size="small" variant="outlined" startIcon={<ExportIcon />}
-            onClick={() => setExportMenu(v => !v)}
+            size="small"
+            variant="outlined"
+            startIcon={<ExportIcon />}
+            endIcon={<ArrowDropDownIcon />}
+            onClick={(e) => setExportAnchor(e.currentTarget)}
           >
             Export
           </Button>
-          {exportMenu && (
-            <Box sx={{ display: 'flex', gap: 0.5 }}>
-              <Button size="small" variant="contained" onClick={() => { exportToCSV(filtered); setExportMenu(false); }}>
-                CSV
-              </Button>
-              <Button size="small" variant="contained" onClick={() => { exportToJSON(filtered); setExportMenu(false); }}>
-                JSON
-              </Button>
-            </Box>
-          )}
+          <Menu
+            anchorEl={exportAnchor}
+            open={Boolean(exportAnchor)}
+            onClose={() => setExportAnchor(null)}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+            slotProps={{
+              paper: { elevation: 3, sx: { minWidth: 190, borderRadius: 2, mt: 0.5 } },
+            }}
+          >
+            <MenuItem onClick={() => { exportToCSV(filtered); setExportAnchor(null); }}>
+              <ListItemIcon><TableChartIcon fontSize="small" color="primary" /></ListItemIcon>
+              <ListItemText
+                primary="Export as CSV"
+                secondary="Spreadsheet format"
+                slotProps={{ secondary: { style: { fontSize: 11 } } }}
+              />
+            </MenuItem>
+            <MenuItem onClick={() => { exportToJSON(filtered); setExportAnchor(null); }}>
+              <ListItemIcon><DataObjectIcon fontSize="small" color="secondary" /></ListItemIcon>
+              <ListItemText
+                primary="Export as JSON"
+                secondary="Structured data format"
+                slotProps={{ secondary: { style: { fontSize: 11 } } }}
+              />
+            </MenuItem>
+          </Menu>
         </Box>
       </Paper>
 
