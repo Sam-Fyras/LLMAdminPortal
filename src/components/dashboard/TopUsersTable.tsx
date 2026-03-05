@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -9,6 +9,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TableSortLabel,
   Box,
   Chip,
 } from '@mui/material';
@@ -16,30 +17,72 @@ import { EmojiEvents as TrophyIcon } from '@mui/icons-material';
 
 interface TopUser {
   user_id: string;
+  name: string;
   tokens: number;
+  cost: number;
+  lastActivity: string;
   rank: number;
 }
 
 interface TopUsersTableProps {
   data: TopUser[];
   limit?: number;
+  onUserClick?: (userId: string) => void;
 }
+
+type SortKey = 'rank' | 'name' | 'tokens' | 'cost' | 'lastActivity';
+type SortDirection = 'asc' | 'desc';
+
+const columns: { key: SortKey; label: string; align?: 'right' }[] = [
+  { key: 'rank', label: 'Rank' },
+  { key: 'name', label: 'User Name' },
+  { key: 'tokens', label: 'Tokens', align: 'right' },
+  { key: 'cost', label: 'Est. Cost', align: 'right' },
+  { key: 'lastActivity', label: 'Last Activity' },
+];
 
 /**
  * TopUsersTable Component
- * Displays a table of top users ranked by token usage
- * Shows user rank, user ID, and total tokens consumed
+ * Displays a sortable table of top users ranked by token usage
  */
 export const TopUsersTable: React.FC<TopUsersTableProps> = ({
   data,
   limit = 10,
+  onUserClick,
 }) => {
-  const topUsers = data.slice(0, limit);
+  const [sortKey, setSortKey] = useState<SortKey>('rank');
+  const [sortDir, setSortDir] = useState<SortDirection>('asc');
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDir(key === 'rank' ? 'asc' : 'desc');
+    }
+  };
+
+  const sortedUsers = useMemo(() => {
+    const sliced = data.slice(0, limit);
+    return [...sliced].sort((a, b) => {
+      const valA = a[sortKey];
+      const valB = b[sortKey];
+
+      let comparison: number;
+      if (typeof valA === 'string' && typeof valB === 'string') {
+        comparison = valA.localeCompare(valB);
+      } else {
+        comparison = (valA as number) - (valB as number);
+      }
+
+      return sortDir === 'asc' ? comparison : -comparison;
+    });
+  }, [data, limit, sortKey, sortDir]);
 
   const getRankColor = (rank: number) => {
     if (rank === 1) return 'gold';
     if (rank === 2) return 'silver';
-    if (rank === 3) return '#CD7F32'; // bronze
+    if (rank === 3) return '#CD7F32';
     return 'default';
   };
 
@@ -57,22 +100,31 @@ export const TopUsersTable: React.FC<TopUsersTableProps> = ({
           Top Users by Token Usage
         </Typography>
 
-        {topUsers && topUsers.length > 0 ? (
+        {sortedUsers && sortedUsers.length > 0 ? (
           <TableContainer>
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Rank</TableCell>
-                  <TableCell>User ID</TableCell>
-                  <TableCell align="right">Tokens</TableCell>
+                  {columns.map((col) => (
+                    <TableCell key={col.key} align={col.align}>
+                      <TableSortLabel
+                        active={sortKey === col.key}
+                        direction={sortKey === col.key ? sortDir : 'asc'}
+                        onClick={() => handleSort(col.key)}
+                      >
+                        {col.label}
+                      </TableSortLabel>
+                    </TableCell>
+                  ))}
                 </TableRow>
               </TableHead>
               <TableBody>
-                {topUsers.map((user) => (
+                {sortedUsers.map((user) => (
                   <TableRow
                     key={user.user_id}
+                    onClick={() => onUserClick?.(user.user_id)}
                     sx={{
-                      '&:hover': { bgcolor: 'action.hover' },
+                      '&:hover': { bgcolor: 'action.hover', cursor: onUserClick ? 'pointer' : 'default' },
                       bgcolor: user.rank <= 3 ? 'action.selected' : 'inherit',
                     }}
                   >
@@ -88,7 +140,10 @@ export const TopUsersTable: React.FC<TopUsersTableProps> = ({
                       </Box>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2">{user.user_id}</Typography>
+                      <Box>
+                        <Typography variant="body2" fontWeight={500}>{user.name}</Typography>
+                        <Typography variant="caption" color="text.secondary">{user.user_id}</Typography>
+                      </Box>
                     </TableCell>
                     <TableCell align="right">
                       <Chip
@@ -97,6 +152,12 @@ export const TopUsersTable: React.FC<TopUsersTableProps> = ({
                         color={user.rank === 1 ? 'primary' : 'default'}
                         variant={user.rank <= 3 ? 'filled' : 'outlined'}
                       />
+                    </TableCell>
+                    <TableCell align="right">
+                      <Typography variant="body2">${user.cost.toFixed(2)}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{user.lastActivity}</Typography>
                     </TableCell>
                   </TableRow>
                 ))}

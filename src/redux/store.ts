@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './slices/authSlice';
 import notificationsReducer from './slices/notificationsSlice';
 import cacheReducer from './slices/cacheSlice';
+import budgetReducer from './slices/budgetSlice';
 
 /**
  * Configure Redux store with minimal slices
@@ -11,6 +12,7 @@ export const store = configureStore({
     auth: authReducer,
     notifications: notificationsReducer,
     cache: cacheReducer,
+    budget: budgetReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

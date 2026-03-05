@@ -13,7 +13,6 @@ import {
   mockRoleLimits,
   mockUserLimits,
   mockQuotaCheck,
-  mockUsageLogs,
   mockUsageAnalytics,
 } from './data/usage';
 import { mockRoles, mockUsersByRole } from './data/roles';
@@ -24,6 +23,7 @@ import {
   mockRuleValidation,
   mockRuleVersions,
 } from './data/rules';
+import { mockBudgets, mockBudgetProjection } from './data/budget';
 
 /**
  * Setup mock API responses for development
@@ -293,6 +293,35 @@ export function setupMockApi(axiosInstance: AxiosInstance, delay: number = 500) 
   mock.onDelete(/\/api\/v1\/limits\/[\w-]+\/usertokenlimit\/[\w-]+/).reply(204);
 
   // ============================================================================
+  // Dashboard API (used by DashboardPage)
+  // ============================================================================
+
+  // Get token usage summary
+  mock.onGet(/\/api\/v1\/tenant\/token-usage/).reply(200, {
+    totalTokens: 4500000,
+    activeUsers: 24,
+    estimatedCost: 225.00,
+    avgTokensPerRequest: 1250,
+    dailyUsage: [
+      { date: '2025-01-09', OpenAI: 290000, Anthropic: 170000, Google: 95000, Cohere: 45000, totalTokens: 600000, cost: 30 },
+      { date: '2025-01-10', OpenAI: 310000, Anthropic: 180000, Google: 110000, Cohere: 50000, totalTokens: 650000, cost: 32.5 },
+      { date: '2025-01-11', OpenAI: 250000, Anthropic: 150000, Google: 85000, Cohere: 45000, totalTokens: 530000, cost: 26.5 },
+      { date: '2025-01-12', OpenAI: 360000, Anthropic: 210000, Google: 120000, Cohere: 60000, totalTokens: 750000, cost: 37.5 },
+      { date: '2025-01-13', OpenAI: 275000, Anthropic: 165000, Google: 90000, Cohere: 50000, totalTokens: 580000, cost: 29 },
+      { date: '2025-01-14', OpenAI: 325000, Anthropic: 190000, Google: 110000, Cohere: 55000, totalTokens: 680000, cost: 34 },
+      { date: '2025-01-15', OpenAI: 340000, Anthropic: 200000, Google: 115000, Cohere: 55000, totalTokens: 710000, cost: 35.5 },
+    ],
+  });
+
+  // Get model usage distribution
+  mock.onGet(/\/api\/v1\/tenant\/model-usage/).reply(200, [
+    { model: 'GPT-4', value: 2160000, percentage: 48 },
+    { model: 'Claude 3 Sonnet', value: 1080000, percentage: 24 },
+    { model: 'GPT-3.5 Turbo', value: 810000, percentage: 18 },
+    { model: 'Gemini Pro', value: 450000, percentage: 10 },
+  ]);
+
+  // ============================================================================
   // Analytics (UsageTrackingService)
   // ============================================================================
 
@@ -322,9 +351,11 @@ export function setupMockApi(axiosInstance: AxiosInstance, delay: number = 500) 
 
   // Get top users
   mock.onGet(/\/api\/v1\/analytics\/[\w-]+\/top-users/).reply(200, [
-    { user_id: 'user-1', tokens: 3200000, rank: 1 },
-    { user_id: 'user-2', tokens: 2650000, rank: 2 },
-    { user_id: 'user-3', tokens: 2350000, rank: 3 },
+    { user_id: 'user-1', name: 'Sarah Johnson', tokens: 3200000, cost: 160.00, lastActivity: '2025-01-15', rank: 1 },
+    { user_id: 'user-2', name: 'Michael Chen', tokens: 2650000, cost: 132.50, lastActivity: '2025-01-14', rank: 2 },
+    { user_id: 'user-3', name: 'Emily Rodriguez', tokens: 2350000, cost: 117.50, lastActivity: '2025-01-15', rank: 3 },
+    { user_id: 'user-4', name: 'James Wilson', tokens: 1890000, cost: 94.50, lastActivity: '2025-01-13', rank: 4 },
+    { user_id: 'user-5', name: 'Priya Patel', tokens: 1540000, cost: 77.00, lastActivity: '2025-01-15', rank: 5 },
   ]);
 
   // Get usage by model
@@ -404,12 +435,15 @@ export function setupMockApi(axiosInstance: AxiosInstance, delay: number = 500) 
 
   // Create rule (new API)
   mock.onPost(/\/api\/v1\/tenants\/[\w-]+\/rules$/).reply((config) => {
+    const now = new Date().toISOString();
     const newRule = {
       id: `rule-${Date.now()}`,
       tenantId: 'tenant-123',
       schemaVersion: '1.0',
-      createdDate: new Date().toISOString(),
-      updatedDate: new Date().toISOString(),
+      createdDate: now,
+      updatedDate: now,
+      created_at: now,
+      updated_at: now,
       version: 1,
       ...JSON.parse(config.data),
     };
@@ -432,10 +466,13 @@ export function setupMockApi(axiosInstance: AxiosInstance, delay: number = 500) 
     const ruleId = config.url?.split('/').pop();
     const ruleIndex = mockTenantRules.findIndex(r => r.id === ruleId);
     if (ruleIndex !== -1) {
+      const now = new Date().toISOString();
       mockTenantRules[ruleIndex] = {
         ...mockTenantRules[ruleIndex],
         ...JSON.parse(config.data),
         version: mockTenantRules[ruleIndex].version + 1,
+        updatedDate: now,
+        updated_at: now,
       };
       return [200, mockTenantRules[ruleIndex]];
     }
@@ -472,7 +509,8 @@ export function setupMockApi(axiosInstance: AxiosInstance, delay: number = 500) 
 
   // Toggle rule status (new API)
   mock.onPatch(/\/api\/v1\/tenants\/[\w-]+\/rules\/[\w-]+\/status/).reply((config) => {
-    const ruleId = config.url?.split('/').pop()?.replace('/status', '');
+    const parts = config.url?.split('/') || [];
+    const ruleId = parts[parts.length - 2]; // segment before 'status'
     const ruleIndex = mockTenantRules.findIndex(r => r.id === ruleId);
     if (ruleIndex !== -1) {
       mockTenantRules[ruleIndex].enabled = JSON.parse(config.data).enabled;
@@ -512,6 +550,59 @@ export function setupMockApi(axiosInstance: AxiosInstance, delay: number = 500) 
     const version = parseInt(config.url?.split('/').pop() || '1');
     const versionData = mockRuleVersions.find(v => v.version === version);
     return versionData ? [200, versionData.snapshot] : [404, { error: 'Version not found' }];
+  });
+
+  // ============================================================================
+  // Budget Management
+  // ============================================================================
+
+  // Get cost projection — must be registered BEFORE the GET by ID handler
+  mock.onGet(/\/api\/v1\/tenants\/[\w-]+\/budgets\/projection/).reply(200, mockBudgetProjection);
+
+  // Get all budgets
+  mock.onGet(/\/api\/v1\/tenants\/[\w-]+\/budgets$/).reply(200, mockBudgets);
+
+  // Get budget by ID
+  mock.onGet(/\/api\/v1\/tenants\/[\w-]+\/budgets\/[\w-]+$/).reply((config) => {
+    const budgetId = config.url?.split('/').pop();
+    const budget = mockBudgets.find((b) => b.id === budgetId);
+    return budget ? [200, budget] : [404, { error: { message: 'Budget not found' } }];
+  });
+
+  // Create budget
+  mock.onPost(/\/api\/v1\/tenants\/[\w-]+\/budgets$/).reply((config) => {
+    const newBudget = {
+      id: `budget-${Date.now()}`,
+      tenantId: 'mock-tenant-123',
+      currentUsage: { tokens: 0, cost: 0, lastUpdated: new Date() },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...JSON.parse(config.data),
+    };
+    mockBudgets.push(newBudget);
+    return [201, newBudget];
+  });
+
+  // Update budget
+  mock.onPut(/\/api\/v1\/tenants\/[\w-]+\/budgets\/[\w-]+/).reply((config) => {
+    const budgetId = config.url?.split('/').pop();
+    const idx = mockBudgets.findIndex((b) => b.id === budgetId);
+    if (idx !== -1) {
+      mockBudgets[idx] = { ...mockBudgets[idx], ...JSON.parse(config.data), updatedAt: new Date() };
+      return [200, mockBudgets[idx]];
+    }
+    return [404, { error: { message: 'Budget not found' } }];
+  });
+
+  // Delete budget
+  mock.onDelete(/\/api\/v1\/tenants\/[\w-]+\/budgets\/[\w-]+/).reply((config) => {
+    const budgetId = config.url?.split('/').pop();
+    const idx = mockBudgets.findIndex((b) => b.id === budgetId);
+    if (idx !== -1) {
+      mockBudgets.splice(idx, 1);
+      return [204, null];
+    }
+    return [404, { error: { message: 'Budget not found' } }];
   });
 
   // ============================================================================

@@ -37,3 +37,4 @@ export * from './data/tenants';
 export * from './data/usage';
 export * from './data/roles';
 export * from './data/rules';
+export * from './data/alerts';

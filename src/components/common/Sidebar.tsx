@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { 
-  Toolbar, Typography,Box,
+import React from 'react';
+import {
+  Box,
   Drawer,ListItem,ListItemButton,
   ListItemIcon,ListItemText,List
 } from '@mui/material';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import {
     Home,Person,Gavel,Storefront,
@@ -11,13 +12,16 @@ import {
 } from '@mui/icons-material' ;
 
 const Sidebar : React.FC = () =>{
+    const navigate = useNavigate();
+    const location = useLocation();
+
     const menuItem = [
-        {text:'Home',icon : <Home />},
-        {text:'User',icon : <Person />},
-        {text:'Rules',icon : <Gavel />},
-        {text:'Provider',icon : <Storefront />},
-        {text:'Budget',icon : <AccountBalance />},
-        {text:'Alerts',icon : <Notifications />},
+        {text:'Home', icon : <Home />, path: '/dashboard'},
+        {text:'User', icon : <Person />, path: '/users'},
+        {text:'Rules', icon : <Gavel />, path: '/rules'},
+        {text:'Provider', icon : <Storefront />, path: '/providers'},
+        {text:'Budget', icon : <AccountBalance />, path: '/budget'},
+        {text:'Alerts', icon : <Notifications />, path: '/alerts'},
     ]
 
     return (
@@ -40,12 +44,15 @@ const Sidebar : React.FC = () =>{
                 {menuItem.map((item) => (
                     <ListItem key = {item.text} disablePadding sx={{ display:'block',mb:2 }}>
                         <ListItemButton
+                            onClick={() => navigate(item.path)}
+                            selected={location.pathname === item.path}
                             sx={{
                             minHeight: 48,
                             px: 2.5,
                             mx: 1,
-                            borderRadius: 4, 
-                            '&:hover': { bgcolor: 'action.hover' }
+                            borderRadius: 4,
+                            '&:hover': { bgcolor: 'action.hover' },
+                            '&.Mui-selected': { bgcolor: 'action.selected' },
                             }}
                         >
                             <ListItemIcon sx={{ minWidth: 0, mr: 2, justifyContent: 'center' }}>

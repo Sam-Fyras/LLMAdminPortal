@@ -12,6 +12,8 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import RulesManagementPage from './pages/RulesManagementPage';
 import UserRoleManagementPage from './pages/UserRoleManagementPage';
+import AlertsAuditPage from './pages/AlertsAuditPage';
+import BudgetPage from './pages/BudgetPage';
 
 // Create a theme instance
 const theme = createTheme({
@@ -51,6 +53,16 @@ const AppContent: React.FC = () => {
           <Route path="/users" element={
             <ProtectedRoute>
               <UserRoleManagementPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/budget" element={
+            <ProtectedRoute>
+              <BudgetPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/alerts" element={
+            <ProtectedRoute>
+              <AlertsAuditPage />
             </ProtectedRoute>
           } />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />

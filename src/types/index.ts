@@ -8,6 +8,8 @@ export * from './usage';
 export * from './rule';
 export * from './provider';
 export * from './api';
+export * from './alert';
+export * from './budget';
 
 // ============================================================================
 // Legacy Types (for existing components - will migrate gradually)
@@ -40,10 +42,9 @@ export interface TokenUsage {
 
 export interface DailyUsage {
   date: string;
-  promptTokens: number;
-  completionTokens: number;
   totalTokens: number;
   cost: number;
+  [provider: string]: string | number;
 }
 
 export interface TokenUsageSummary {
@@ -76,16 +77,28 @@ export interface Role {
 }
 
 /**
- * Legacy rule type (used by existing RulesManagementPage)
- * @deprecated Use TenantRule from './rule' for new implementations
+ * Rule type used by RulesManagementPage
+ * Aligned with backend RuleEngine — uses unified 'content_moderation' type
+ * for both toxicity blocking and PII redaction.
  */
+export type LegacyRuleType =
+  | 'token_limit'
+  | 'model_restriction'
+  | 'rate_limit'
+  | 'content_moderation';
+
 export interface Rule {
   id: string;
   name: string;
-  type: 'token_limit' | 'model_restriction' | 'rate_limit';
+  description?: string;
+  type: LegacyRuleType;
   priority: number;
   enabled: boolean;
+  scope?: 'global' | 'tenant';
   conditions: Record<string, any>;
-  action?: string;
+  action?: 'allow' | 'block' | 'modify' | 'throttle' | 'log';
   parameters?: Record<string, any>;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
 }

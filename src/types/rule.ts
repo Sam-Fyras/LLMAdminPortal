@@ -7,17 +7,16 @@ export type RuleType =
   | 'token_limit'
   | 'model_restriction'
   | 'rate_limit'
-  | 'hard_block'
-  | 'redaction'
-  | 'cost_control';
+  | 'content_moderation';
 
 /**
  * Rule action types
  */
-export type RuleAction = 'block' | 'alert' | 'redact';
+export type RuleAction = 'allow' | 'block' | 'modify' | 'throttle' | 'log';
 
 /**
  * Tenant-specific rule from RuleManagementService
+ * Extends TenantScopedModel for tenantId/schemaVersion; uses backend timestamp names directly.
  */
 export interface TenantRule extends TenantScopedModel {
   id: string;
@@ -33,6 +32,9 @@ export interface TenantRule extends TenantScopedModel {
   effective_start?: string; // ISO date
   effective_end?: string; // ISO date
   created_by?: string;
+  // Backend timestamp fields (backend uses created_at/updated_at, not createdDate/updatedDate)
+  created_at?: string;
+  updated_at?: string;
 }
 
 /**
@@ -42,9 +44,7 @@ export type RuleConditions =
   | TokenLimitCondition
   | ModelRestrictionCondition
   | RateLimitCondition
-  | HardBlockCondition
-  | RedactionCondition
-  | CostControlCondition;
+  | ContentModerationCondition;
 
 /**
  * Token limit rule condition
@@ -76,50 +76,50 @@ export interface RateLimitCondition {
 }
 
 /**
- * Hard block rule condition (keyword blocking)
+ * Content moderation rule condition (toxicity + PII detection)
  */
-export interface HardBlockCondition {
-  type: 'hard_block';
-  keywords: string[];
-  case_sensitive: boolean;
-  whole_word_only: boolean;
-  custom_message?: string;
+export interface ContentModerationCondition {
+  type: 'content_moderation';
+  check_toxicity?: boolean;
+  toxicity_threshold?: number; // 0.0 – 1.0
+  check_pii?: boolean;
+  pii_types?: ('email' | 'phone' | 'ssn' | 'credit_card' | 'ip_address' | 'name' | 'address')[];
 }
 
-/**
- * Redaction rule condition (PII removal)
- */
-export interface RedactionCondition {
-  type: 'redaction';
-  pattern_type: 'email' | 'phone' | 'ssn' | 'credit_card' | 'custom';
-  custom_regex?: string;
-  replacement: string; // Default: "[REDACTED]"
-  apply_to: 'prompt' | 'response' | 'both';
-}
 
 /**
- * Cost control rule condition
+ * Rule evaluation status (from RuleEngine)
  */
-export interface CostControlCondition {
-  type: 'cost_control';
-  max_cost_per_request?: number;
-  daily_cost_cap?: number;
-  monthly_cost_cap?: number;
-}
+export type RuleEvaluationStatus = 'success' | 'error' | 'skipped' | 'timeout';
 
 /**
- * Global rule template
+ * Rule severity levels
+ */
+export type RuleSeverity = 'low' | 'medium' | 'high' | 'critical';
+
+/**
+ * Global rule template (optional template library, copied to tenants)
  */
 export interface GlobalRule {
   id: string;
   name: string;
-  description: string;
   type: RuleType;
-  template_config: RuleConditions;
+  description: string;
+  // Default configuration (can be overridden when copied to tenants)
+  default_conditions: Record<string, any>;
+  default_parameters: Record<string, any>;
+  default_priority: number;
+  default_enabled: boolean;
+  // Categorization
   category?: string;
-  is_recommended: boolean;
-  created_date: string;
-  updated_date: string;
+  severity: RuleSeverity;
+  tags: string[];
+  // Metadata
+  version: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
 }
 
 /**
