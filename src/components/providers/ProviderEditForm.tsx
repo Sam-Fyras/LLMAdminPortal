@@ -8,9 +8,11 @@ import {
 import {
     Visibility, VisibilityOff,
     WifiTethering as TestIcon,
-    Save as SaveIcon
+    Save as SaveIcon,
+    Lock as LockIcon,
 } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -74,8 +76,9 @@ const PROVIDER_DEFAULT_URLS: Record<string, string> = {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const ProviderEditForm: React.FC<ProviderEditFormProps> = ({
-    open, onClose, provider 
+    open, onClose, provider
 }) => {
+    const { isSuperAdmin } = useAuth();
     const [form, setForm] = useState<LLMConfigUpdate>({});
     const [showApiKey, setShowApiKey] = useState(false);
     const [testStatus, setTestStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -127,10 +130,12 @@ const ProviderEditForm: React.FC<ProviderEditFormProps> = ({
 
     const validate = (): boolean => {
         const newErrors: Partial<Record<keyof LLMConfigUpdate, string>> = {};
-        if (!form.provider) newErrors.provider = 'Provider is required';
+        if (isSuperAdmin) {
+            if (!form.provider) newErrors.provider = 'Provider is required';
+            if (!form.api_url) newErrors.api_url = 'API URL is required';
+            if (!form.api_key_id) newErrors.api_key_id = 'API Key ID is required';
+        }
         if (!form.models || form.models.length === 0) newErrors.models = 'At least one model is required';
-        if (!form.api_url) newErrors.api_url = 'API URL is required';
-        if (!form.api_key_id) newErrors.api_key_id = 'API Key ID is required';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -183,9 +188,16 @@ const ProviderEditForm: React.FC<ProviderEditFormProps> = ({
             <DialogContent dividers>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>
 
+                    {/* ── Admin notice banner ── */}
+                    {!isSuperAdmin && (
+                        <Alert severity="info" icon={<LockIcon fontSize="small" />} sx={{ py: 0.5 }}>
+                            As an Admin you can only modify <strong>Models</strong>. All other fields are read-only.
+                        </Alert>
+                    )}
+
                     {/* ── Provider & Status ── */}
                     <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-                        <FormControl fullWidth error={!!errors.provider}>
+                        <FormControl fullWidth error={!!errors.provider} disabled={!isSuperAdmin}>
                             <InputLabel>Provider</InputLabel>
                             <Select
                                 value={form.provider ?? ''}
@@ -209,6 +221,7 @@ const ProviderEditForm: React.FC<ProviderEditFormProps> = ({
                                     checked={form.is_active ?? true}
                                     onChange={(e) => handleChange('is_active', e.target.checked)}
                                     color="success"
+                                    disabled={!isSuperAdmin}
                                 />
                             }
                             label={form.is_active ? 'Active' : 'Inactive'}
@@ -216,7 +229,7 @@ const ProviderEditForm: React.FC<ProviderEditFormProps> = ({
                         />
                     </Box>
 
-                    {/* ── Models (multi-select) ── */}
+                    {/* ── Models (multi-select) — editable by all ── */}
                     <FormControl fullWidth error={!!errors.models}>
                         <InputLabel>Models Enabled</InputLabel>
                         <Select
@@ -251,6 +264,8 @@ const ProviderEditForm: React.FC<ProviderEditFormProps> = ({
                         error={!!errors.api_url}
                         helperText={errors.api_url}
                         placeholder="https://api.example.com/v1"
+                        disabled={!isSuperAdmin}
+                        slotProps={!isSuperAdmin ? { input: { endAdornment: <InputAdornment position="end"><LockIcon fontSize="small" color="disabled" /></InputAdornment> } } : {}}
                     />
 
                     {/* ── API Key ID ── */}
@@ -262,45 +277,54 @@ const ProviderEditForm: React.FC<ProviderEditFormProps> = ({
                         onChange={(e) => handleChange('api_key_id', e.target.value)}
                         error={!!errors.api_key_id}
                         helperText={errors.api_key_id || 'Reference ID to the stored encrypted API key'}
-                        InputProps={{
-                            endAdornment: (
-                                <InputAdornment position="end">
-                                    <IconButton
-                                        onClick={() => setShowApiKey(prev => !prev)}
-                                        edge="end"
-                                        size="small"
-                                    >
-                                        {showApiKey ? <VisibilityOff /> : <Visibility />}
-                                    </IconButton>
-                                </InputAdornment>
-                            )
+                        disabled={!isSuperAdmin}
+                        slotProps={{
+                            input: {
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        {isSuperAdmin ? (
+                                            <IconButton
+                                                onClick={() => setShowApiKey(prev => !prev)}
+                                                edge="end"
+                                                size="small"
+                                            >
+                                                {showApiKey ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        ) : (
+                                            <LockIcon fontSize="small" color="disabled" />
+                                        )}
+                                    </InputAdornment>
+                                )
+                            }
                         }}
                     />
 
-                    {/* ── Test Connection ── */}
-                    <Box>
-                        <Button
-                            variant="outlined"
-                            startIcon={testStatus === 'loading'
-                                ? <CircularProgress size={16} />
-                                : <TestIcon />
-                            }
-                            onClick={handleTestConnection}
-                            disabled={testStatus === 'loading' || !form.api_url || !form.api_key_id}
-                            size="small"
-                        >
-                            Test Connection
-                        </Button>
-                        {testMessage && (
-                            <Alert
-                                severity={testStatus === 'success' ? 'success' : 'error'}
-                                sx={{ mt: 1 }}
-                                onClose={() => { setTestStatus('idle'); setTestMessage(''); }}
+                    {/* ── Test Connection — super admin only ── */}
+                    {isSuperAdmin && (
+                        <Box>
+                            <Button
+                                variant="outlined"
+                                startIcon={testStatus === 'loading'
+                                    ? <CircularProgress size={16} />
+                                    : <TestIcon />
+                                }
+                                onClick={handleTestConnection}
+                                disabled={testStatus === 'loading' || !form.api_url || !form.api_key_id}
+                                size="small"
                             >
-                                {testMessage}
-                            </Alert>
-                        )}
-                    </Box>
+                                Test Connection
+                            </Button>
+                            {testMessage && (
+                                <Alert
+                                    severity={testStatus === 'success' ? 'success' : 'error'}
+                                    sx={{ mt: 1 }}
+                                    onClose={() => { setTestStatus('idle'); setTestMessage(''); }}
+                                >
+                                    {testMessage}
+                                </Alert>
+                            )}
+                        </Box>
+                    )}
 
                     <Divider />
 
@@ -320,13 +344,19 @@ const ProviderEditForm: React.FC<ProviderEditFormProps> = ({
                             e.target.value === '' ? null : Number(e.target.value)
                         )}
                         helperText="Leave empty to use provider default"
-                        inputProps={{ min: 1, max: 128000 }}
+                        disabled={!isSuperAdmin}
+                        slotProps={{
+                            htmlInput: { min: 1, max: 128000 },
+                            ...(!isSuperAdmin ? { input: { endAdornment: <InputAdornment position="end"><LockIcon fontSize="small" color="disabled" /></InputAdornment> } } : {}),
+                        }}
                     />
 
                     {/* Temperature */}
-                    <Box>
+                    <Box sx={{ opacity: isSuperAdmin ? 1 : 0.5, pointerEvents: isSuperAdmin ? 'auto' : 'none' }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                            <Typography variant="body2">Temperature</Typography>
+                            <Typography variant="body2">
+                                Temperature {!isSuperAdmin && <LockIcon sx={{ fontSize: 12, ml: 0.5, verticalAlign: 'middle', color: 'text.disabled' }} />}
+                            </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 {form.temperature ?? 'Default'}
                             </Typography>
@@ -343,21 +373,21 @@ const ProviderEditForm: React.FC<ProviderEditFormProps> = ({
                                 { value: 1, label: '1' },
                                 { value: 2, label: '2' },
                             ]}
+                            disabled={!isSuperAdmin}
                         />
-                        <Button
-                            size="small"
-                            variant="text"
-                            onClick={() => handleChange('temperature', null)}
-                            sx={{ mt: 0.5 }}
-                        >
-                            Reset to default
-                        </Button>
+                        {isSuperAdmin && (
+                            <Button size="small" variant="text" onClick={() => handleChange('temperature', null)} sx={{ mt: 0.5 }}>
+                                Reset to default
+                            </Button>
+                        )}
                     </Box>
 
                     {/* Top P */}
-                    <Box>
+                    <Box sx={{ opacity: isSuperAdmin ? 1 : 0.5, pointerEvents: isSuperAdmin ? 'auto' : 'none' }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                            <Typography variant="body2">Top P</Typography>
+                            <Typography variant="body2">
+                                Top P {!isSuperAdmin && <LockIcon sx={{ fontSize: 12, ml: 0.5, verticalAlign: 'middle', color: 'text.disabled' }} />}
+                            </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 {form.top_p ?? 'Default'}
                             </Typography>
@@ -374,15 +404,13 @@ const ProviderEditForm: React.FC<ProviderEditFormProps> = ({
                                 { value: 0.5, label: '0.5' },
                                 { value: 1, label: '1' },
                             ]}
+                            disabled={!isSuperAdmin}
                         />
-                        <Button
-                            size="small"
-                            variant="text"
-                            onClick={() => handleChange('top_p', null)}
-                            sx={{ mt: 0.5 }}
-                        >
-                            Reset to default
-                        </Button>
+                        {isSuperAdmin && (
+                            <Button size="small" variant="text" onClick={() => handleChange('top_p', null)} sx={{ mt: 0.5 }}>
+                                Reset to default
+                            </Button>
+                        )}
                     </Box>
 
                     <Divider />
@@ -395,6 +423,7 @@ const ProviderEditForm: React.FC<ProviderEditFormProps> = ({
                                     checked={form.is_default ?? false}
                                     onChange={(e) => handleChange('is_default', e.target.checked)}
                                     color="primary"
+                                    disabled={!isSuperAdmin}
                                 />
                             }
                             label="Set as Default Provider"
@@ -406,8 +435,9 @@ const ProviderEditForm: React.FC<ProviderEditFormProps> = ({
                             sx={{ width: 160 }}
                             value={form.fallback_priority ?? 1}
                             onChange={(e) => handleChange('fallback_priority', Number(e.target.value))}
-                            inputProps={{ min: 1 }}
+                            slotProps={{ htmlInput: { min: 1 } }}
                             helperText="Order to try if primary fails"
+                            disabled={!isSuperAdmin}
                         />
                     </Box>
 

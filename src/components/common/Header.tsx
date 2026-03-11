@@ -10,6 +10,7 @@ import {
   AdminPanelSettings as SuperAdminIcon,
   ManageAccounts as AdminIcon,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { mockTenantUsers, MockTenantUser } from '../../mocks/data/mockUsers';
 
@@ -28,11 +29,13 @@ const ROLE_CONFIG = {
 
 const Header: React.FC = () => {
   const { isAuthenticated, account, currentMockUser, switchUser } = useAuth();
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleSwitchUser = (user: MockTenantUser) => {
     switchUser(user);
     setAnchorEl(null);
+    navigate(user.role === 'super_admin' ? '/tenants' : '/users');
   };
 
   const roleConfig = ROLE_CONFIG[currentMockUser.role];

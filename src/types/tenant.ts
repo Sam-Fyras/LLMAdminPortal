@@ -60,3 +60,44 @@ export interface Tier {
   features: string[];
   price_usd?: number;
 }
+
+/**
+ * Request model for tenant onboarding
+ * Maps to onboardRequest backend model
+ */
+export interface OnboardRequest {
+  tenant_name: string;
+  admin_email: string;
+  azure_tenant_id: string;
+  azure_client_id: string;
+  tier_name: string;
+  firewall_version: string;
+  llm_model: string;
+  token_count: number;
+  mongo_url?: string;
+}
+
+/**
+ * Request model for updating an existing tenant
+ * Maps to updateRequest backend model
+ */
+export interface UpdateRequest {
+  tenant_id?: string;
+  tenant_name?: string;
+  tenant_admin?: { name: string; email: string };
+  tier_id?: string;
+  firewall_version_id?: string;
+  llm_use?: string;
+  token_count?: number;
+  mongo_url?: string;
+  azure_ad_tenant_id?: string;
+  azure_ad_client_id?: string;
+  status?: string;
+  is_active?: boolean;
+  schema_version?: number;
+  metadata?: Record<string, string>;
+  created_date?: string;
+  updated_date?: string;
+  deleted_at?: string;
+  is_deleted?: boolean;
+}

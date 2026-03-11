@@ -8,23 +8,26 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 import {
     Home,Person,Gavel,Storefront,
-    AccountBalance,Notifications
+    AccountBalance,Notifications,Business
 } from '@mui/icons-material' ;
-
-const menuItem = [
-    { text: 'Home', icon: <Home />, path: '/' },
-    { text: 'Users', icon: <Person />, path: '/users' },
-    { text: 'Rules', icon: <Gavel />, path: '/rules' },
-    { text: 'Provider', icon: <Storefront />, path: '/provider' },
-    { text: 'Budget', icon: <AccountBalance />, path: '/budget' },
-    { text: 'Alerts', icon: <Notifications />, path: '/alerts' },
-
-]
+import { useAuth } from '../../context/AuthContext';
 
 const Sidebar : React.FC = () =>{
 
     const navigate = useNavigate();
     const location = useLocation();
+    const { isSuperAdmin } = useAuth();
+
+    const menuItem = [
+        { text: 'Home', icon: <Home />, path: '/' },
+        isSuperAdmin
+            ? { text: 'Tenants', icon: <Business />, path: '/tenants' }
+            : { text: 'Users', icon: <Person />, path: '/users' },
+        { text: 'Rules', icon: <Gavel />, path: '/rules' },
+        { text: 'Provider', icon: <Storefront />, path: '/provider' },
+        { text: 'Budget', icon: <AccountBalance />, path: '/budget' },
+        { text: 'Alerts', icon: <Notifications />, path: '/alerts' },
+    ];
 
     return (
         <Drawer

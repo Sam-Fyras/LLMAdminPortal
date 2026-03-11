@@ -57,24 +57,9 @@ import DataObjectIcon from '@mui/icons-material/DataObject';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
-// ============== Type Definitions ==============
+import { UserRow } from '../../mocks/data/users';
 
-interface UserRow {
-  _id: string;
-  user_id: string;
-  tenant_id: string;
-  display_name: string;
-  email: string;
-  role_id: string;
-  custom_permissions: string[];
-  status: 'active' | 'inactive';
-  created_date: string;
-  updated_date: string;
-  last_login: string | null;
-  is_deleted: boolean;
-  metadata: Record<string, any>;
-  schema_version: number;
-}
+// ============== Type Definitions ==============
 
 interface DailyUsage {
   date: string;

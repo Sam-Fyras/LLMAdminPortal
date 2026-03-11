@@ -15,6 +15,7 @@ import AlertsAuditPage from './pages/AlertsAuditPage';
 import BudgetPage from './pages/BudgetPage';
 import UsersPage from './pages/Users';
 import ProviderPage from './pages/Providers';
+import TenantsPage from './pages/Tenants';
 
 // Create a theme instance
 const theme = createTheme({
@@ -69,6 +70,11 @@ const AppContent: React.FC = () => {
           <Route path="/alerts" element={
             <ProtectedRoute>
               <AlertsAuditPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/tenants" element={
+            <ProtectedRoute>
+              <TenantsPage />
             </ProtectedRoute>
           } />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
